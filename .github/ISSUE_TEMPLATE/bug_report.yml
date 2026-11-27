@@ -1,0 +1,23 @@
+name: Bug report
+description: Describe a reproducible problem in the CLI, fixture or Scenario Studio
+title: "[Bug] "
+body:
+  - type: input
+    id: environment
+    attributes:
+      label: Version, OS and Node.js version
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Minimal steps using a synthetic local scenario
+      description: Remove secrets, private URLs and personal data before including any JSON or logs.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and observed results
+    validations:
+      required: true

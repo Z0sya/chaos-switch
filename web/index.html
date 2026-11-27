@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chaos Switch · Scenario Studio</title>
+  <link rel="stylesheet" href="/ui.css">
+  <script type="module" src="/ui.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wordmark"><span class="mark" aria-hidden="true"></span> CHAOS SWITCH</div>
+    <div class="environment"><span aria-hidden="true"></span> Loopback only <kbd>127.0.0.1</kbd></div>
+  </header>
+  <main>
+    <div class="page-head">
+      <div>
+        <h1>Scenario Studio</h1>
+        <p>Compare a healthy baseline with a repeatable sequence of HTTP faults.</p>
+      </div>
+      <button class="primary" id="run">Run comparison</button>
+    </div>
+    <div id="message" role="status" aria-live="polite"></div>
+    <div class="workbench">
+      <section aria-labelledby="scenario-title" class="panel">
+        <header class="panel-head">
+          <div class="panel-title"><h2 id="scenario-title">Scenario</h2><span id="phase-summary"></span></div>
+          <div class="toolbar">
+            <button id="example">Example</button>
+            <button id="import">Import</button>
+            <input id="file" type="file" accept="application/json,.json" hidden>
+            <button id="save">Save locally</button>
+            <button id="export">Export JSON</button>
+          </div>
+        </header>
+        <div class="parameters">
+          <label>Scenario name<input id="name" maxlength="80"></label>
+          <label>Client timeout <span>ms</span><input id="timeout" type="number" min="50" max="1000"></label>
+          <label>Response budget <span>ms</span><input id="budget" type="number" min="1" max="4000"></label>
+        </div>
+        <ol id="phases" class="phases" aria-label="Ordered fault phases"></ol>
+        <footer class="panel-foot">
+          <button id="add">+ Add phase</button>
+          <p>Each phase counts its own requests. “Every 2” affects requests 2, 4, 6…</p>
+        </footer>
+      </section>
+      <section aria-labelledby="results-title" class="panel results">
+        <header class="panel-head">
+          <div class="panel-title"><h2 id="results-title">Comparison</h2><span id="run-state">Awaiting run</span></div>
+          <button id="export-report" disabled>Export report</button>
+        </header>
+        <div class="empty" id="empty">
+          <div class="signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <h3>Run a scenario to see its impact</h3>
+          <p>Studio records latency, fallback and recovery for each request.</p>
+        </div>
+        <div id="results" hidden>
+          <div class="metrics" id="metrics"></div>
+          <p id="fingerprint" class="fingerprint"></p>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th scope="col">Req</th><th scope="col">Fault</th><th scope="col">Baseline</th><th scope="col">Replay</th><th scope="col">Check</th></tr></thead>
+              <tbody id="observations"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

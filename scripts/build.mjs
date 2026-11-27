@@ -1,14 +1,11 @@
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
-import { stripTypeScriptTypes } from 'node:module';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-const sourceDir = new URL('../src/', import.meta.url);
-const outputDir = new URL('../dist/', import.meta.url);
-const sources = await readdir(sourceDir);
-await mkdir(outputDir, { recursive: true });
-
-for (const file of sources.filter(file => file.endsWith('.ts'))) {
-  const source = await readFile(new URL(file, sourceDir), 'utf8');
-  const code = stripTypeScriptTypes(source).replace(/( from '\.\/[^']+)\.ts'/g, "$1.js'");
-  await writeFile(new URL(file.replace(/\.ts$/, '.js'), outputDir), code);
-}
-console.log('CLI собран в dist/.');
+const root = new URL('../', import.meta.url);
+const tsc = fileURLToPath(new URL('node_modules/typescript/bin/tsc', root));
+const result = spawnSync(process.execPath, [tsc, '--project', 'tsconfig.build.json'], {
+  cwd: fileURLToPath(root),
+  stdio: 'inherit',
+});
+if (result.error) console.error(result.error.message);
+process.exitCode = result.status ?? 1;

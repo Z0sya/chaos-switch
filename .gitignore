@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+*.log
+/.env*
+/chaos-report.json
+/.npmrc
+/.DS_Store
+/.vscode/
+/.idea/

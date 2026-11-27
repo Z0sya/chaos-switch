@@ -1,0 +1,17 @@
+name: Feature request
+description: Propose an improvement to local resilience testing
+title: "[Idea] "
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: What local test workflow are you trying to improve?
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What result would help you?
+      description: A small synthetic scenario or report example is welcome.
+    validations:
+      required: true

@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "name": "Inventory recovery",
+  "timeoutMs": 180,
+  "budgetMs": 950,
+  "phases": [
+    {
+      "label": "Warm up",
+      "count": 2,
+      "every": 1,
+      "fault": {
+        "kind": "healthy"
+      },
+      "expect": "auto"
+    },
+    {
+      "label": "Latency on every second call",
+      "count": 4,
+      "every": 2,
+      "fault": {
+        "kind": "delay",
+        "ms": 75
+      },
+      "expect": "auto"
+    },
+    {
+      "label": "Service unavailable",
+      "count": 2,
+      "every": 1,
+      "fault": {
+        "kind": "http-error",
+        "status": 503
+      },
+      "expect": "auto"
+    },
+    {
+      "label": "Upstream takes too long",
+      "count": 1,
+      "every": 1,
+      "fault": {
+        "kind": "timeout"
+      },
+      "expect": "auto"
+    },
+    {
+      "label": "Connection closes",
+      "count": 1,
+      "every": 1,
+      "fault": {
+        "kind": "disconnect"
+      },
+      "expect": "auto"
+    },
+    {
+      "label": "Truncated body",
+      "count": 2,
+      "every": 2,
+      "fault": {
+        "kind": "partial"
+      },
+      "expect": "auto"
+    },
+    {
+      "label": "Service recovers",
+      "count": 2,
+      "every": 1,
+      "fault": {
+        "kind": "healthy"
+      },
+      "expect": "auto"
+    }
+  ]
+}

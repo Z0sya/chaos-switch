@@ -1,58 +1,56 @@
 # CHAOS SWITCH
 
-CLI для тестирования отказов HTTP-зависимости на локальном стенде. Демонстрационное приложение запрашивает остаток товара. При недоступности зависимости оно возвращает заранее заданный резервный остаток и причину перехода на него.
+CHAOS SWITCH compares how a test application behaves against a healthy HTTP dependency and against a repeatable series of faults. Design the series in Scenario Studio, export the JSON and run it again from the CLI or CI.
 
-## Запуск
+## Quick start
 
-Требуется Node.js 24.12 или новее. Сторонних пакетов у проекта нет. Команды запускаются из этой папки в PowerShell.
+Requires Node.js 24.12+. Building from source uses npm and a first download of the locked build tools. If you have the compiled distribution, start at the third command. The compiled CLI and Studio run offline.
 
-```powershell
-node src/cli.ts --help
-node src/cli.ts demo
-node src/cli.ts demo > chaos-report.json
+```sh
+npm ci --ignore-scripts
+npm run build
+node dist/cli.js run examples/inventory.json
+node dist/cli.js studio --port 43118
 ```
 
-`demo` запускает тестовую зависимость и потребителя на свободных портах `127.0.0.1`. Для каждого сценария создаётся отдельная пара серверов. После кейса оба сервера закрываются.
+Open the address printed by Studio, then select **Run comparison**. The inventory example performs 14 requests against a healthy fixture and 14 against the planned faults. The comparison displays recovery, fallback, response latency and failed checks. Import and export the scenario or report as JSON. **Save locally** restores one scenario per browser and local port. Use the same port between sessions to reopen a saved scenario.
 
-| Режим | Ответ зависимости `GET /inventory` | Ожидаемый ответ приложения `GET /stock` |
-| --- | --- | --- |
-| `healthy` | HTTP 200, остаток 7 | HTTP 200, актуальный остаток 7 |
-| `delay` | HTTP 200 с задержкой 1 600 мс | HTTP 200, резервный остаток 5, причина `timeout`. Таймаут клиента 120 мс. |
-| `503` | HTTP 503 | HTTP 200, резервный остаток 5, причина `unavailable` |
-| `disconnect` | Сокет закрывается до HTTP-ответа | HTTP 200, резервный остаток 5, причина `disconnect` |
+## Supported faults
 
-В каждом кейсе отчёт сверяет HTTP-статус, JSON целиком, ровно одно обращение к зависимости и время ответа не больше 1 100 мс. Лимит внешнего наблюдения отделён от таймаута клиента и учитывает планирование работы локальным процессом.
+| Effect | What the fixture does |
+| --- | --- |
+| Healthy | Returns HTTP 200 with the synthetic inventory quantity |
+| Delay | Waits before sending a complete HTTP 200 |
+| Timeout | Holds the socket without responding, for at most 5 seconds |
+| HTTP error | Returns the configured HTTP 400–599 status |
+| Disconnect | Closes the socket before sending headers |
+| Partial body | Sends HTTP 200 headers and part of the JSON body, then closes the socket |
 
-Код выхода `0` означает, что все 16 утверждений прошли. Код `1` означает несовпадение ожидания с измеренным ответом. Ошибки запуска, аргументов и получения результата от локального приложения дают код `2`. Фактический результат успешного запуска сохранён в [reports/demo-report.json](reports/demo-report.json).
+Each phase has its own request count and frequency. For example, `every: 2` affects requests 2, 4, 6 and so on within that phase. Requests in between behave normally. Replay starts from the first phase.
 
-## Запуск стаба для своего теста
+The built-in consumer serves a healthy quantity or a fallback with its reason, each with HTTP 200. Each observation checks the complete output, response time and number of calls. Reports include p50/p95 latency, fallback count, response details and a hash of the normalized scenario. The plan and hash repeat across runs. Timing measurements vary with the host.
 
-В первом терминале запустите тестовую зависимость. Во втором отправьте запрос или задайте этот endpoint в конфигурации своего **локального тестового клиента**.
+## Run locally with your client
 
-```powershell
-node src/cli.ts serve --fault delay --delay-ms 750 --port 43117
+```sh
+node dist/cli.js serve --scenario examples/inventory.json --port 43117
 ```
 
-```powershell
-curl.exe -i http://127.0.0.1:43117/inventory
+Point your isolated test client's inventory dependency at `http://127.0.0.1:43117/inventory`. See [Integration](docs/integration.md) for exit codes, the scenario format and a runnable client example. Original PoC commands remain available with `demo` and `serve --fault healthy|delay|503|disconnect`.
+
+## Verify and build
+
+```sh
+npm run typecheck
+npm run build
+npm test
+node examples/check-client.mjs
 ```
 
-В `serve` доступны четыре режима из таблицы. По умолчанию режим `healthy`, порт назначает ОС (`--port 0`), CLI печатает точный адрес. Остановите сервер через Ctrl+C. Для ручной проверки 503 или разрыва перезапустите его с `--fault 503` или `--fault disconnect`. У клиента при разрыве будет транспортная ошибка без HTTP-статуса.
+TypeScript checks the Node.js modules, browser UI and tests. `npm test` opens actual listening sockets on `127.0.0.1`. The compiled CLI is in `dist/cli.js`. Keep its neighboring `package.json`, `dist/` and `web/` together when copying a built distribution. The installed npm dependencies are only needed for development and compilation.
 
-## Сборка и тесты
+## Scope and security
 
-```powershell
-node scripts/build.mjs
-node dist/cli.js demo
-node --test test/chaos.test.ts
-```
+The Alpha runs on IPv4 loopback with one fixed synthetic `GET /inventory` fixture. Consumers explicitly point their local test configuration at the fixture. The CLI and scenario format have no target URL, forwarding, external monitoring, telemetry, authentication, HTTPS or load testing. For concurrent requests, effects follow the order accepted by the fixture. Use one sequential client for deterministic replay. Reports compare the included consumer. Application-specific assertions belong in the consuming application's test suite.
 
-На Windows с Node.js v24.22.3 сборка создала три ESM-файла в `dist/`. Собранная версия `dist/cli.js` успешно отработала с `--help` и `demo`. Node предупреждает об экспериментальном статусе API `stripTypeScriptTypes` при сборке. Сборка удаляет аннотации типов, статический анализ TypeScript не запускался.
-
-В полном прогоне прошли **8 из 8** автоматических тестов. Они проверили локальные аргументы, отклонение внешней цели, ответы здорового API и трёх режимов отказа, сквозной сценарий и выявление ошибочного fallback. Собранное демо прошло **4 из 4** сценариев и **16 из 16** утверждений. В изоляции Codex сетевые тесты потребовали разрешения на локальные TCP-соединения из-за `EACCES`. Все соединения при проверке использовали `127.0.0.1`.
-
-## Границы PoC
-
-- HTTP/1.1, IPv4 loopback, синтетический `GET /inventory`. Доступ ограничен локальным интерфейсом. CLI отклоняет аргументы с публичными/production-целями, слушает только `127.0.0.1` и не пересылает трафик.
-- Готовые утверждения относятся к демонстрационному приложению. Для своего клиента используйте `serve` как зависимость в его тестах и задавайте ожидаемый результат в этих тестах.
-- Проверены Windows и одна версия Node.js. Время ответа меняется от прогона к прогону. Разрыв моделируется закрытием сокета до ответа, обработчик транспорта конкретного клиента может сообщать о нём иначе.
+See [Architecture](docs/architecture.md), [Security](SECURITY.md), the [changelog](CHANGELOG.md) and [license](LICENSE).
