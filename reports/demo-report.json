@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "passed": true,
+  "dependencyTimeoutMs": 120,
+  "injectedDelayMs": 1600,
+  "results": [
+    {
+      "fault": "healthy",
+      "passed": true,
+      "checks": [
+        {
+          "name": "app-status",
+          "expected": 200,
+          "actual": 200,
+          "passed": true
+        },
+        {
+          "name": "app-body",
+          "expected": {
+            "source": "live",
+            "quantity": 7,
+            "reason": null
+          },
+          "actual": {
+            "source": "live",
+            "quantity": 7,
+            "reason": null
+          },
+          "passed": true
+        },
+        {
+          "name": "dependency-calls",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "max-app-ms",
+          "expected": 1100,
+          "actual": 19.1,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "fault": "delay",
+      "passed": true,
+      "checks": [
+        {
+          "name": "app-status",
+          "expected": 200,
+          "actual": 200,
+          "passed": true
+        },
+        {
+          "name": "app-body",
+          "expected": {
+            "source": "fallback",
+            "quantity": 5,
+            "reason": "timeout"
+          },
+          "actual": {
+            "source": "fallback",
+            "quantity": 5,
+            "reason": "timeout"
+          },
+          "passed": true
+        },
+        {
+          "name": "dependency-calls",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "max-app-ms",
+          "expected": 1100,
+          "actual": 128.9,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "fault": "503",
+      "passed": true,
+      "checks": [
+        {
+          "name": "app-status",
+          "expected": 200,
+          "actual": 200,
+          "passed": true
+        },
+        {
+          "name": "app-body",
+          "expected": {
+            "source": "fallback",
+            "quantity": 5,
+            "reason": "unavailable"
+          },
+          "actual": {
+            "source": "fallback",
+            "quantity": 5,
+            "reason": "unavailable"
+          },
+          "passed": true
+        },
+        {
+          "name": "dependency-calls",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "max-app-ms",
+          "expected": 1100,
+          "actual": 6.2,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "fault": "disconnect",
+      "passed": true,
+      "checks": [
+        {
+          "name": "app-status",
+          "expected": 200,
+          "actual": 200,
+          "passed": true
+        },
+        {
+          "name": "app-body",
+          "expected": {
+            "source": "fallback",
+            "quantity": 5,
+            "reason": "disconnect"
+          },
+          "actual": {
+            "source": "fallback",
+            "quantity": 5,
+            "reason": "disconnect"
+          },
+          "passed": true
+        },
+        {
+          "name": "dependency-calls",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "max-app-ms",
+          "expected": 1100,
+          "actual": 3.6,
+          "passed": true
+        }
+      ]
+    }
+  ]
+}
